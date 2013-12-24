@@ -1,6 +1,16 @@
-.eunit
-deps
-*.o
-*.beam
-*.plt
-erl_crash.dump
+###### NODE #####
+lib-cov
+*.seed
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.gz
+
+pids
+logs
+results
+build
+
+node_modules
