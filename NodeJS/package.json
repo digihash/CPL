@@ -1,0 +1,19 @@
+{
+  "name": "cpl-javascript-project",
+  "preferGlobal": false,
+  "version": "0.0.1",
+  "author": "",
+  "description": "CPL JavaScript Project",
+  "dependencies" : {
+    "jshint"   :  ">=2.3.0",
+    "mocha"   :  ">=1.15.1",
+    "socket.io" : ">=0.9.16",
+    "node-inspector" : "*"
+  }, 
+  "license": "MIT",
+  "engines": {
+    "node": ">=0.10.9"
+  }
+}
+
+   
