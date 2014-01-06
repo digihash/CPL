@@ -148,7 +148,160 @@
 			}
 		}
 		return toReturnTanks;
-	}
+	};
+
+	Battlefield.prototype.tanksInRocketScope = function(tank) {
+		var heightMax = ((tank.position[0] + this.configuration.rocketRadius) < this.configuration.height) ? tank.position[0]+this.configuration.rocketRadius : this.configuration.height-1;
+		var heightMin = ((tank.position[0] - this.configuration.rocketRadius) >= 0) ? tank.position[0] - this.configuration.rocketRadius : 0;
+		var widthMax = ((tank.position[1] + this.configuration.rocketRadius) < this.configuration.width) ? tank.position[1] + this.configuration.rocketRadius : this.configuration.width-1;
+		var widthMin = ((tank.position[1] - this.configuration.rocketRadius) >= 0) ? tank.position[1] - this.configuration.rocketRadius : 0;
+
+		var toReturnTanks = [];
+		var i, j;
+		for (i = heightMin; i <= heightMax; i++)
+			for (j = widthMin; j <= widthMax; j++)
+				if( !(tank.position[0] === i && tank.position[1] === j))
+					if( (Math.sqrt(Math.pow(tank.position[0] - i, 2) + Math.pow(tank.position[1] - j, 2)) <= this.configuration.rocketRadius) && this.field[i][j] === Tile.TANK)
+						if (!isWallsInBetween(getCellsInBetween(tank.position[1], tank.position[0], j, i, this.field), this.field)) // als er geen muren tussen deze twee posities staan.
+							for (var x = 0; x < this.tanks.length; x++)
+								if(this.tanks[x].position[0] === i && this.tanks[x].position[1] === j)
+									toReturnTanks.push(this.tanks[x]);
+		return toReturnTanks;
+	};
+
+	var getCellsInBetween = function(x1, y1, x2, y2, field) {
+		var i;               // loop counter
+		var ystep, xstep;    // the step on y and x axis
+		var error;           // the error accumulated during the increment
+		var errorprev;       // *vision the previous value of the error variable
+		var y = y1, x = x1;  // the line points
+		var ddy, ddx;        // compulsory variables: the double values of dy and dx
+		var dx = x2 - x1;
+		var dy = y2 - y1;
+
+		var positions = [];
+
+		// NB the last point can't be here, because of its previous positions.push([which has to be verified)
+		if (dy < 0) {
+			ystep = -1;
+			dy = -dy;
+		} else
+			ystep = 1;
+
+		if (dx < 0) {
+			xstep = -1;
+			dx = -dx;
+		} else
+			xstep = 1;
+
+		ddy = 2 * dy;  // work with double values for full precision
+		ddx = 2 * dx;
+
+		if (ddx >= ddy) {  // first octant (0 <= slope <= 1)
+			// compulsory initialization (even for errorprev, needed when dx==dy)
+			errorprev = error = dx;  // start in the middle of the square
+
+			for (i=0 ; i < dx ; i++) {  // do not use the first positions.push([already done)
+				x += xstep;
+				error += ddy;
+				if (error > ddx) {  // increment y if AFTER the middle ( > )
+					y += ystep;
+					error -= ddx;
+					// three cases (octant == right->right-top for directions below):
+					if (error + errorprev < ddx)  // bottom square also
+						positions.push([y-ystep, x]);
+					else if (error + errorprev > ddx)  // left square also
+						positions.push([y, x-xstep]);
+					else {  // corner: bottom and left squares also
+						positions.push([y-ystep, x]);
+						positions.push([y, x-xstep]);
+					}
+				}
+				positions.push([y, x]);
+				errorprev = error;
+			}
+		} else {  // the same as above
+			errorprev = error = dy;
+			for (i=0 ; i < dy ; i++) {
+				y += ystep;
+				error += ddx;
+				if (error > ddy){
+					x += xstep;
+					error -= ddy;
+					if (error + errorprev < ddy)
+						positions.push([y, x-xstep]);
+					else if (error + errorprev > ddy)
+						positions.push([y-ystep, x]);
+					else {
+						positions.push([y, x-xstep]);
+						positions.push([y-ystep, x]);
+					}
+				}
+				positions.push([y, x]);
+				errorprev = error;
+			}
+		}
+		return positions;
+		// assert ((y == y2) && (x == x2));  // the last positions.push([y2,x2) has to be the same with the last point of the algorithm
+	};
+
+	var isWallsInBetween = function(positions, field) {
+		for (var i = 0; i < positions.length; i++) {
+    		if(field[positions[i][0]][positions[i][1]] === Tile.WALL)
+				return true;
+		}
+		return false;
+	};
+
+	Battlefield.prototype.shootTank = function(t1, t2) {
+		var tanksInRocketScope = this.tanksInRocketScope(t1);
+		for (var i = 0; i < tanksInRocketScope.length; i++) {
+			if(tanksInRocketScope[i] === t2)
+				return true;
+		};
+		return false;
+	};
+
+	Battlefield.prototype.shootRadarBeam = function(tank, degree) {
+		var rico = Math.tan(degree * (Math.PI/180));
+		var b = tank.position[0] - rico*tank.position[1];
+		var pos2 = [];
+		if(degree >= 0 && degree < 90) {
+			if(degree == 0) {
+				pos2 = [this.configuration.height-1, tank.position[1]];
+			} else if(degree == 45) {
+				pos2 = [this.configuration.height-1, this.configuration.width-1];
+			}
+
+		} else if (degree >= 90 && degree < 180) {
+			if(degree == 90) {
+				pos2 = [tank.position[0], this.configuration.width+1];
+			}
+
+		} else if (degree >= 180 && degree < 270) {
+			if(degree == 180) {
+				pos2 = [0, tank.position[1]];
+			}
+
+		} else if (degree >= 270 && degree < 360) {
+			if(degree == 270) {
+				pos2 = [tank.position[0], 0];
+			} else if (degree == 360) {
+				pos2 = [this.configuration.height-1, tank.position[1]];
+			}
+		}
+
+		var positions = getCellsInBetween(tank.position[1], tank.position[0], pos2[1], pos2[0], this.field)
+
+		for (var i = 0; i < positions.length; i++) {
+    		if(this.field[positions[i][0]][positions[i][1]] === Tile.WALL) {
+				return Tile.WALL;
+    		} else if(this.field[positions[i][0]][positions[i][1]] === Tile.TANK) {
+    			return Tile.TANK;
+    		}
+		}
+		return Tile.FREE
+	};
 
 	module.exports.Battlefield = Battlefield;
 	module.exports.Tile = Tile;

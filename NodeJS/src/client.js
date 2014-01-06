@@ -1,5 +1,15 @@
 (function() {
 	var BrowserGUI, Canvas, ConsoleGUI, ImageStore, Tank;
+	var socket;
+
+	if(typeof window === 'undefined') {
+		consoleIO = require("socket.io");
+		socket = consoleIO.connect("127.0.0.1:8080");
+	} else {
+		socket = io.connect("127.0.0.1:8080");
+	}
+
+
 
 	ImageStore = (function() {
 		function ImageStore() {}

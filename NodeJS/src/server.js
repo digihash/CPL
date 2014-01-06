@@ -107,6 +107,7 @@
     return new Tank(socket, battlefield);
   });
 
+
   console.log("[+] Listening on http://localhost:" + configuration.port);
 
   app.listen(configuration.port);

@@ -429,7 +429,7 @@
       assert.equal(b.shootRadarBeam(t1, 0), Tile.TANK);
       assert.equal(b.shootRadarBeam(t1, 45), Tile.WALL);
       assert.equal(b.shootRadarBeam(t1, 90), Tile.WALL);
-      assert.equal(b.shootRadarBeam(t2, 180), Tile.WALL);
+      assert.equal(b.shootRadarBeam(t2, 180), Tile.TANK);
       return assert.equal(b.shootRadarBeam(t2, 270), Tile.WALL);
     });
     return it("should return the free type for unbounded radar beams", function() {
